@@ -1,0 +1,17 @@
+# Python virtual environment created by the installer
+.venv/
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Never commit real credentials
+.env
+
+# OCR output samples
+*_OCR.docx
+
+# Editor / OS cruft
+*.swp
+.DS_Store
