@@ -52,9 +52,17 @@ bash install/fedora/install.sh
 The installer will:
 
 1. install any missing system packages with `dnf` (one sudo prompt),
-2. create a `.venv` and install the Python dependencies,
-3. install the Nautilus right-click extension and restart Nautilus,
-4. open the credential setup dialog on first run.
+2. **copy the app into `~/.local/share/pdf-ocr-converter`** (a permanent,
+   out-of-the-way location) so the folder you cloned/downloaded is disposable,
+3. create a `.venv` there and install the Python dependencies,
+4. install the Nautilus right-click extension and restart Nautilus,
+5. open the credential setup dialog on first run.
+
+> Because everything is copied into `~/.local/share/pdf-ocr-converter`, you can
+> **delete the cloned/downloaded folder afterwards** — the tool keeps working.
+> To uninstall later, run `bash install/fedora/uninstall.sh` from that app
+> folder (or just remove `~/.local/share/pdf-ocr-converter` and the extension
+> file).
 
 > If the right-click entries don't appear right away, log out and back in once
 > so GNOME loads the new Nautilus extension.

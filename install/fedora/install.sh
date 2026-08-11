@@ -115,6 +115,29 @@ install_system_packages() {
 }
 install_system_packages
 
+# --- Relocate to a permanent app directory ---
+# Copy the project into ~/.local/share/pdf-ocr-converter so the folder you
+# downloaded/cloned becomes disposable. The venv and the Nautilus extension
+# are then created against this stable location, which survives clearing out
+# Downloads and stays out of the way of normal file browsing.
+APP_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/pdf-ocr-converter"
+if [ "${PROJECT_DIR}" != "${APP_DIR}" ]; then
+    printf '[→] Copying app files to %s\n' "${APP_DIR}"
+    mkdir -p "${APP_DIR}"
+    for item in src install docs requirements.txt .env.example pdf-ocr-icon.svg LICENSE README.md; do
+        if [ -e "${PROJECT_DIR}/${item}" ]; then
+            cp -a "${PROJECT_DIR}/${item}" "${APP_DIR}/"
+        fi
+    done
+    # Never carry over caches (a source-tree .venv is not copied above)
+    find "${APP_DIR}" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+    PROJECT_DIR="${APP_DIR}"
+    SCRIPT_DIR="${APP_DIR}/install/fedora"
+    chmod +x "${SCRIPT_DIR}"/*.sh 2>/dev/null || true
+    printf '[✓] App files installed to %s\n' "${APP_DIR}"
+    printf '    (the folder you ran this from can be deleted afterwards)\n'
+fi
+
 # --- Python venv ---
 VENV_DIR="${PROJECT_DIR}/.venv"
 if [ -d "${VENV_DIR}" ] && [ ! -f "${VENV_DIR}/bin/activate" ]; then
@@ -149,7 +172,9 @@ if command -v nautilus >/dev/null 2>&1; then
     printf '[✓] Nautilus restarted\n'
 fi
 
-printf '\n[✓] Installation complete.\n\n'
+printf '\n[✓] Installation complete.\n'
+printf '    Installed to: %s\n' "${PROJECT_DIR}"
+printf '    You can now delete the folder you ran this installer from.\n\n'
 
 CONFIG_FILE="${HOME}/.config/pdf-ocr-converter/.env"
 if [ ! -f "${CONFIG_FILE}" ]; then
