@@ -14,17 +14,54 @@ the tkinter dialogs and run the Adobe OCR job.
 Requires the `nautilus-python` package. Supports both nautilus-python 4.x
 (GTK4 Nautilus, current Fedora) and 3.x (legacy GTK3).
 """
+import glob
 import os
 import subprocess
 
 import gi
 
-# nautilus-python 4.x targets the GTK4 Nautilus shipped on current Fedora;
-# 3.x is the legacy GTK3 API. Prefer 4.0, fall back to 3.0.
-try:
-    gi.require_version("Nautilus", "4.0")
-except ValueError:
-    gi.require_version("Nautilus", "3.0")
+
+def _require_nautilus():
+    """Pin the Nautilus GObject-introspection binding to whatever version is
+    actually installed.
+
+    The typelib version tracks the Nautilus release (e.g. GNOME 50 ships
+    ``Nautilus-4.1``, older GTK4 releases ``Nautilus-4.0``, legacy GTK3
+    ``Nautilus-3.0``). Rather than hard-code one, discover the installed
+    versions from the girepository directories and try them newest-first,
+    falling back to a known list. This keeps the extension working across
+    Nautilus upgrades without edits.
+    """
+    search_dirs = [d for d in os.environ.get("GI_TYPELIB_PATH", "").split(os.pathsep) if d]
+    search_dirs += ["/usr/lib64/girepository-1.0", "/usr/lib/girepository-1.0"]
+
+    discovered = set()
+    for directory in search_dirs:
+        for path in glob.glob(os.path.join(directory, "Nautilus-*.typelib")):
+            version = os.path.basename(path)[len("Nautilus-"):-len(".typelib")]
+            discovered.add(version)
+
+    def _version_key(version):
+        return [int(part) if part.isdigit() else part for part in version.split(".")]
+
+    candidates = sorted(discovered, key=_version_key, reverse=True)
+    for fallback in ("4.1", "4.0", "3.0"):
+        if fallback not in candidates:
+            candidates.append(fallback)
+
+    for version in candidates:
+        try:
+            gi.require_version("Nautilus", version)
+            return version
+        except ValueError:
+            continue
+    raise ValueError(
+        "No Nautilus GObject-introspection typelib found. "
+        "Is the 'nautilus-python' package installed?"
+    )
+
+
+_require_nautilus()
 
 from gi.repository import GObject, Nautilus  # noqa: E402
 
