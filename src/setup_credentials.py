@@ -17,7 +17,7 @@ import stat
 import sys
 from pathlib import Path
 
-from config import config_dir, config_file, load_config, CredentialsMissingError
+from config import APP_WM_CLASS, config_dir, config_file, load_config, CredentialsMissingError
 
 
 ADOBE_TOKEN_URL = "https://pdf-services.adobe.io/token"
@@ -145,7 +145,7 @@ def run_gui() -> int:
     client_id, client_secret, locale = _current_values()
     result = {"ok": False}
 
-    root = tk.Tk()
+    root = tk.Tk(className=APP_WM_CLASS)
     root.title("PDF-OCR-Converter — Settings")
     root.geometry("520x320")
 

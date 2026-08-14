@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=PDF-OCR-Converter
+GenericName=PDF OCR Converter
+Comment=Convert PDFs to DOCX via Adobe OCR
+Exec=__PROJECT_DIR__/install/fedora/setup_credentials.sh
+Icon=pdf-ocr-converter
+Terminal=false
+Categories=Office;Utility;
+Keywords=PDF;OCR;DOCX;Adobe;Scan;Convert;
+StartupWMClass=PDF-OCR-Converter

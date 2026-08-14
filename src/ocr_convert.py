@@ -19,7 +19,7 @@ import sys
 import threading
 from pathlib import Path
 
-from config import load_config, CredentialsMissingError, setup_logging
+from config import APP_WM_CLASS, load_config, CredentialsMissingError, setup_logging
 
 logger = logging.getLogger("pdf-ocr-converter")
 
@@ -61,7 +61,7 @@ def _choose_locale(default: str) -> str:
     from setup_credentials import SUPPORTED_LOCALES
 
     result = {"locale": default, "confirmed": False}
-    root = tk.Tk()
+    root = tk.Tk(className=APP_WM_CLASS)
     root.title("PDF-OCR-Converter — Document Language")
     root.geometry("420x220")
     frm = ttk.Frame(root, padding=16)
@@ -108,7 +108,7 @@ def _run_with_progress(work):
     except ImportError:
         return work()
 
-    root = tk.Tk()
+    root = tk.Tk(className=APP_WM_CLASS)
     root.title("PDF-OCR-Converter")
     root.geometry("360x130")
     root.resizable(False, False)

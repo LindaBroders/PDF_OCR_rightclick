@@ -16,6 +16,14 @@ else
     echo "Extension not installed at ${target} (nothing to remove)."
 fi
 
+# Remove the desktop entry and icon
+DATA_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}"
+rm -fv "${DATA_DIR}/applications/pdf-ocr-converter.desktop"
+rm -fv "${DATA_DIR}/icons/hicolor/scalable/apps/pdf-ocr-converter.svg"
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "${DATA_DIR}/applications" >/dev/null 2>&1 || true
+fi
+
 # Reload Nautilus so the menu entries disappear
 if command -v nautilus >/dev/null 2>&1; then
     nautilus -q >/dev/null 2>&1 || true
