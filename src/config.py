@@ -16,6 +16,12 @@ from dotenv import dotenv_values
 
 APP_NAME = "pdf-ocr-converter"
 
+# WM_CLASS given to the tkinter windows so the desktop shell can match them to
+# the installed .desktop entry and show the app's name + icon in the dock/
+# taskbar instead of the generic "Tk". Must equal the StartupWMClass in
+# install/fedora/pdf-ocr-converter.desktop.
+APP_WM_CLASS = "PDF-OCR-Converter"
+
 
 def config_dir() -> Path:
     if sys.platform == "win32":

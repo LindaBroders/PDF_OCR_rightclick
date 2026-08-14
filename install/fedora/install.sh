@@ -166,6 +166,25 @@ sed "s|__PROJECT_DIR__|${PROJECT_DIR}|g" \
     "${SCRIPT_DIR}/nautilus-extension/${EXT_NAME}" > "${EXT_DIR}/${EXT_NAME}"
 printf '[✓] Nautilus extension installed\n'
 
+# --- Install app icon + desktop entry ---
+# Gives the tkinter windows a real name and icon in the dock/taskbar (instead
+# of the generic "Tk"). GNOME matches the window's WM_CLASS (PDF-OCR-Converter)
+# to this .desktop entry's StartupWMClass, then shows its Name + Icon.
+DATA_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}"
+ICON_DIR="${DATA_DIR}/icons/hicolor/scalable/apps"
+APPS_DIR="${DATA_DIR}/applications"
+mkdir -p "${ICON_DIR}" "${APPS_DIR}"
+cp "${PROJECT_DIR}/pdf-ocr-icon.svg" "${ICON_DIR}/pdf-ocr-converter.svg"
+sed "s|__PROJECT_DIR__|${PROJECT_DIR}|g" \
+    "${SCRIPT_DIR}/pdf-ocr-converter.desktop" > "${APPS_DIR}/pdf-ocr-converter.desktop"
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t "${DATA_DIR}/icons/hicolor" >/dev/null 2>&1 || true
+fi
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "${APPS_DIR}" >/dev/null 2>&1 || true
+fi
+printf '[✓] App icon and menu entry installed\n'
+
 # --- Restart Nautilus so the extension loads ---
 if command -v nautilus >/dev/null 2>&1; then
     nautilus -q >/dev/null 2>&1 || true
