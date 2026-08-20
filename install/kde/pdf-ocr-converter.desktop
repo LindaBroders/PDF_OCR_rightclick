@@ -1,0 +1,21 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=application/pdf;
+Actions=OcrToDocx;MergeOcrToDocx;OcrSettings;
+X-KDE-Priority=TopLevel
+
+[Desktop Action OcrToDocx]
+Name=OCR to DOCX
+Icon=pdf-ocr-converter
+Exec=__PROJECT_DIR__/install/fedora/ocr_convert.sh %F
+
+[Desktop Action MergeOcrToDocx]
+Name=Merge & OCR to DOCX
+Icon=pdf-ocr-converter
+Exec=__PROJECT_DIR__/install/fedora/merge_and_ocr.sh %F
+
+[Desktop Action OcrSettings]
+Name=OCR Settings
+Icon=pdf-ocr-converter
+Exec=__PROJECT_DIR__/install/fedora/setup_credentials.sh
