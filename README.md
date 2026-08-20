@@ -43,11 +43,26 @@ The installer pulls these system packages via `dnf` if missing:
 
 ## Install
 
+**GNOME (Files / Nautilus):**
+
 ```bash
 git clone https://github.com/lindabroders/pdf_ocr.git
 cd pdf_ocr
 bash install/fedora/install.sh
 ```
+
+**KDE Plasma (Dolphin):**
+
+```bash
+git clone https://github.com/lindabroders/pdf_ocr.git
+cd pdf_ocr
+bash install/kde/install.sh
+```
+
+Both editions share the same converter and install location — they differ only
+in how the right-click menu is registered (a Nautilus extension on GNOME, a
+Dolphin service menu on KDE). The KDE installer pulls `python3-tkinter`,
+`python3-dbus`, and `libnotify` (it does **not** need `nautilus-python`).
 
 The installer will:
 
@@ -120,14 +135,19 @@ left untouched — delete them manually if you want them gone.
 │   ├── ocr_convert.py        # OCR → DOCX, language dialog, progress, notify
 │   ├── merge_and_ocr.py      # merge PDFs, then OCR the result
 │   └── setup_credentials.py  # GUI/CLI credential setup + Adobe validation
-├── install/fedora/
+├── install/fedora/           # GNOME edition
 │   ├── install.sh            # dnf + venv + Nautilus extension installer
 │   ├── uninstall.sh
-│   ├── ocr_convert.sh        # venv wrappers invoked by the extension
+│   ├── ocr_convert.sh        # venv wrappers (shared with the KDE edition)
 │   ├── merge_and_ocr.sh
 │   ├── setup_credentials.sh
+│   ├── pdf-ocr-converter.desktop  # app/dock entry (name + icon)
 │   └── nautilus-extension/
 │       └── pdf_ocr_converter.py   # Nautilus MenuProvider (right-click menu)
+├── install/kde/              # KDE Plasma edition
+│   ├── install.sh            # dnf + venv + Dolphin service-menu installer
+│   ├── uninstall.sh
+│   └── pdf-ocr-converter.desktop  # Dolphin service menu (right-click menu)
 ├── docs/adobe-credentials.md
 ├── requirements.txt
 ├── .env.example
