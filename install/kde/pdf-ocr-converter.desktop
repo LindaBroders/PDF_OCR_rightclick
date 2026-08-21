@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Service
 ServiceTypes=KonqPopupMenu/Plugin
-MimeType=application/pdf;
+MimeType=application/pdf;image/jpeg;image/png;image/tiff;image/bmp;image/gif;image/webp;
 Actions=OcrToDocx;MergeOcrToDocx;OcrSettings;
 X-KDE-Priority=TopLevel
 

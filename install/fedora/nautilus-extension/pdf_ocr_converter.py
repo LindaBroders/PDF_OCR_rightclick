@@ -72,17 +72,29 @@ MERGE_WRAPPER = os.path.join(WRAPPER_DIR, "merge_and_ocr.sh")
 SETTINGS_WRAPPER = os.path.join(WRAPPER_DIR, "setup_credentials.sh")
 
 
-def _is_pdf(file_info):
-    """True if the FileInfo looks like a local PDF."""
+# PDFs plus the image formats that can be OCR'd (wrapped into a PDF first).
+SUPPORTED_MIME_TYPES = {
+    "application/pdf",
+    "image/jpeg", "image/png", "image/tiff",
+    "image/bmp", "image/gif", "image/webp",
+}
+SUPPORTED_SUFFIXES = (
+    ".pdf",
+    ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".gif", ".webp",
+)
+
+
+def _is_supported(file_info):
+    """True if the FileInfo is a local PDF or a supported image."""
     if file_info.get_uri_scheme() != "file":
         return False
     try:
-        if file_info.get_mime_type() == "application/pdf":
+        if file_info.get_mime_type() in SUPPORTED_MIME_TYPES:
             return True
     except Exception:
         pass
-    name = file_info.get_name() or ""
-    return name.lower().endswith(".pdf")
+    name = (file_info.get_name() or "").lower()
+    return name.endswith(SUPPORTED_SUFFIXES)
 
 
 def _local_paths(files):
@@ -107,10 +119,10 @@ class PdfOcrMenuProvider(GObject.GObject, Nautilus.MenuProvider):
             pass
 
     def _menu_items(self, files):
-        pdfs = [f for f in files if _is_pdf(f)]
-        if not pdfs:
+        supported = [f for f in files if _is_supported(f)]
+        if not supported:
             return []
-        paths = _local_paths(pdfs)
+        paths = _local_paths(supported)
         if not paths:
             return []
 
@@ -119,7 +131,7 @@ class PdfOcrMenuProvider(GObject.GObject, Nautilus.MenuProvider):
         ocr_item = Nautilus.MenuItem(
             name="PdfOcrConverter::ocr_to_docx",
             label="OCR to DOCX",
-            tip="Convert PDF(s) to DOCX via Adobe OCR",
+            tip="Convert PDF(s) or image(s) to DOCX via Adobe OCR",
         )
         ocr_item.connect("activate", lambda _item: self._launch(OCR_WRAPPER, paths))
         items.append(ocr_item)
@@ -128,7 +140,7 @@ class PdfOcrMenuProvider(GObject.GObject, Nautilus.MenuProvider):
             merge_item = Nautilus.MenuItem(
                 name="PdfOcrConverter::merge_and_ocr",
                 label="Merge & OCR to DOCX",
-                tip="Merge selected PDFs and convert to DOCX via Adobe OCR",
+                tip="Merge selected PDFs/images and convert to DOCX via Adobe OCR",
             )
             merge_item.connect("activate", lambda _item: self._launch(MERGE_WRAPPER, paths))
             items.append(merge_item)

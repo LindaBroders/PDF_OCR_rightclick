@@ -16,12 +16,36 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import tempfile
 import threading
 from pathlib import Path
 
 from config import APP_WM_CLASS, load_config, CredentialsMissingError, setup_logging
 
 logger = logging.getLogger("pdf-ocr-converter")
+
+# Image formats that can be OCR'd (wrapped into a PDF first, then sent to Adobe)
+IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".gif", ".webp"}
+
+
+def _is_image_path(path: Path) -> bool:
+    return path.suffix.lower() in IMAGE_SUFFIXES
+
+
+def _images_to_pdf(images: list[Path], output_pdf: Path) -> None:
+    """Wrap one or more image files into a single PDF (one page per image
+    frame). Multi-frame images (e.g. multi-page TIFF) contribute every frame.
+    """
+    from PIL import Image, ImageSequence
+
+    pages = []
+    for path in images:
+        with Image.open(path) as im:
+            for frame in ImageSequence.Iterator(im):
+                pages.append(frame.convert("RGB").copy())
+    if not pages:
+        raise ValueError("No image pages to convert.")
+    pages[0].save(output_pdf, "PDF", save_all=True, append_images=pages[1:])
 
 
 def _notify(title: str, message: str) -> None:
@@ -202,16 +226,34 @@ def _locale_to_enum(locale: str, enum_cls):
     return enum_cls.EN_US
 
 
-def convert(pdf_path: Path, locale: str, pdf_services) -> Path:
-    output_path = pdf_path.with_name(f"{pdf_path.stem}_OCR.docx")
-    data = _ocr_then_export(pdf_services, pdf_path, locale)
+def convert(input_path: Path, locale: str, pdf_services) -> Path:
+    """OCR a PDF or image and export it to DOCX next to the input file.
+
+    Images are first wrapped into a temporary PDF (deleted afterwards); PDFs
+    are sent to Adobe as-is.
+    """
+    output_path = input_path.with_name(f"{input_path.stem}_OCR.docx")
+    if _is_image_path(input_path):
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pdfocr-img-", suffix=".pdf")
+        os.close(tmp_fd)
+        tmp_pdf = Path(tmp_name)
+        try:
+            _images_to_pdf([input_path], tmp_pdf)
+            data = _ocr_then_export(pdf_services, tmp_pdf, locale)
+        finally:
+            try:
+                tmp_pdf.unlink(missing_ok=True)
+            except Exception:
+                logger.warning("Failed to delete temp PDF for %s", input_path.name)
+    else:
+        data = _ocr_then_export(pdf_services, input_path, locale)
     output_path.write_bytes(data)
     return output_path
 
 
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
-        print("Usage: ocr_convert.py <file.pdf> [<file2.pdf> ...]", file=sys.stderr)
+        print("Usage: ocr_convert.py <file.pdf|image> [<file2> ...]", file=sys.stderr)
         return 2
 
     files = [Path(p).expanduser().resolve() for p in argv[1:]]

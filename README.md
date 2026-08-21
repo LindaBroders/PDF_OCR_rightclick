@@ -1,8 +1,8 @@
 # PDF-OCR-Converter (Fedora)
 
-Right-click a PDF in **GNOME Files (Nautilus)** and convert it to an editable
-**DOCX** using **Adobe PDF Services** OCR — with a language picker, a progress
-window, and desktop notifications.
+Right-click a **PDF or image** in your file manager and convert it to an
+editable **DOCX** using **Adobe PDF Services** OCR — with a language picker, a
+progress window, and desktop notifications.
 
 This is a **Fedora / GNOME** port of the cross-platform
 [PDF-OCR-Converter](https://github.com/robitschmatthias-ui/PDF-OCR-Converter).
@@ -20,9 +20,14 @@ integration and installer to Fedora:
 
 ## Features
 
-- **Single / batch OCR → DOCX.** Select one or more PDFs, right-click →
-  *OCR to DOCX*. Each file is saved next to the original as `<name>_OCR.docx`.
-- **Merge & OCR.** Select 2+ PDFs, right-click → *Merge & OCR to DOCX*. They are
+- **PDFs *and* images.** Works on PDFs and on image scans/photos
+  (`.jpg .jpeg .png .tif .tiff .bmp .gif .webp`). Images are wrapped into a PDF
+  locally (via Pillow) and then run through the same Adobe OCR → DOCX path — so
+  the same menu items handle both, and you can even mix PDFs and images in one
+  selection.
+- **Single / batch OCR → DOCX.** Select one or more files, right-click →
+  *OCR to DOCX*. Each is saved next to the original as `<name>_OCR.docx`.
+- **Merge & OCR.** Select 2+ files, right-click → *Merge & OCR to DOCX*. They are
   merged (in name order), OCR'd as one document, and saved as
   `<first>_OCR.docx`. The temporary merged file is securely deleted.
 - **Language picker.** A dialog lets you choose the OCR language per run.
@@ -107,11 +112,11 @@ Right-click a PDF (or a selection of PDFs):
 ### From the command line
 
 ```bash
-# Single or batch
-./.venv/bin/python src/ocr_convert.py file1.pdf file2.pdf
+# Single or batch (PDFs and/or images)
+./.venv/bin/python src/ocr_convert.py file1.pdf scan.jpg photo.png
 
-# Merge several PDFs then OCR the combined document
-./.venv/bin/python src/merge_and_ocr.py chapter1.pdf chapter2.pdf
+# Merge several PDFs/images then OCR the combined document
+./.venv/bin/python src/merge_and_ocr.py page1.png page2.png cover.pdf
 ```
 
 Each conversion consumes **two** Adobe transactions (OCR + DOCX export).

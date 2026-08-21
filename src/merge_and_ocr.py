@@ -25,6 +25,8 @@ from config import load_config, CredentialsMissingError, setup_logging
 from ocr_convert import (
     _build_services,
     _choose_locale,
+    _images_to_pdf,
+    _is_image_path,
     _notify,
     _ocr_then_export,
     _run_with_progress,
@@ -62,7 +64,8 @@ def merge_pdfs(inputs: list[Path], output: Path) -> None:
 
 def main(argv: list[str]) -> int:
     if len(argv) < 3:
-        print("Usage: merge_and_ocr.py <file1.pdf> <file2.pdf> [...]", file=sys.stderr)
+        print("Usage: merge_and_ocr.py <file1> <file2> [...]  (PDFs and/or images)",
+              file=sys.stderr)
         return 2
 
     files = [Path(p).expanduser().resolve() for p in argv[1:]]
@@ -86,9 +89,23 @@ def main(argv: list[str]) -> int:
     tmp_fd, tmp_name = tempfile.mkstemp(prefix="pdfocr-merge-", suffix=".pdf")
     os.close(tmp_fd)
     tmp_path = Path(tmp_name)
+    image_temps: list[Path] = []
 
     def _merge_and_ocr():
-        merge_pdfs(files, tmp_path)
+        # Normalize inputs to PDF: images are wrapped into temp PDFs, PDFs
+        # are used as-is, then everything is merged in the given order.
+        normalized: list[Path] = []
+        for p in files:
+            if _is_image_path(p):
+                ifd, iname = tempfile.mkstemp(prefix="pdfocr-img-", suffix=".pdf")
+                os.close(ifd)
+                ipath = Path(iname)
+                _images_to_pdf([p], ipath)
+                image_temps.append(ipath)
+                normalized.append(ipath)
+            else:
+                normalized.append(p)
+        merge_pdfs(normalized, tmp_path)
         pdf_services = _build_services(cfg.client_id, cfg.client_secret)
         return _ocr_then_export(pdf_services, tmp_path, locale)
 
@@ -103,6 +120,11 @@ def main(argv: list[str]) -> int:
         return 1
     finally:
         _secure_delete(tmp_path)
+        for ipath in image_temps:
+            try:
+                ipath.unlink(missing_ok=True)
+            except Exception:
+                logger.warning("Failed to delete temp image PDF %s", ipath.name)
 
 
 if __name__ == "__main__":
